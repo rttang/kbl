@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <script src="kb.js"></script>
+</head>
+<body>
+    <script>    
+    var btn = new $B({name:'123'});
+    btn.on('hello',function(){alert('fuck you')});
+    btn.trigger('hello')
+    btn.changeDir({name:'fuck',right:'fuck fuck'})
+    var btnF =new $B({name:'fuck fuck'})
+    console.log(btn.next('right'))
+    console.log(btn.off('hello'))
+    </script>
+</body>
+</html>
