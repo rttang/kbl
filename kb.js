@@ -9,7 +9,8 @@
             slice = Array.prototype.slice,
             trim = String.prototype.trim,
             indexOf = Array.prototype.indexOf,
-            btns = { 123: '213' }; //用于存放所有按钮
+            class2type = {},
+            btns = {}; //用于存放所有按钮
         BtnCreat.fn = BtnCreat.prototype = {
             constructor: BtnCreat,
             init: function(dir, row, groupNum) {
@@ -83,7 +84,190 @@
                 }
                 return this;
             },
-            //按钮部分
+            each: function(callback, args) {
+                return BtnCreat.each(this, callback, args);
+            },
+
+
+        };
+        BtnCreat.fn.init.prototype = BtnCreat.fn;
+        BtnCreat.extend = BtnCreat.fn.extend = function() {
+            var options, name, src, copy, copyIsArray, clone,
+                target = arguments[0] || {},
+                i = 1,
+                length = arguments.length,
+                deep = false;
+
+            // Handle a deep copy situation
+            if (typeof target === "boolean") {
+                deep = target;
+                target = arguments[1] || {};
+                // skip the boolean and the target
+                i = 2;
+            }
+
+            // Handle case when target is a string or something (possible in deep copy)
+            if (typeof target !== "object" && typeof target !== "function") {
+                target = {};
+            }
+
+            // extend BtnCreat itself if only one argument is passed
+            if (length === i) {
+                target = this;
+                --i;
+            }
+
+            for (; i < length; i++) {
+                // Only deal with non-null/undefined values
+                if ((options = arguments[i]) != null) {
+                    // Extend the base object
+                    for (name in options) {
+                        src = target[name];
+                        copy = options[name];
+
+                        // Prevent never-ending loop
+                        if (target === copy) {
+                            continue;
+                        }
+
+                        // Recurse if we're merging plain objects or arrays
+                        if (deep && copy && (typeof copy === 'object' || (copyIsArray = BtnCreat.isArray(copy)))) {
+                            if (copyIsArray) {
+                                copyIsArray = false;
+                                clone = src && BtnCreat.isArray(src) ? src : [];
+
+                            } else {
+                                clone = src && BtnCreat.isPlainObject(src) ? src : {};
+                            }
+
+                            // Never move original objects, clone them
+                            target[name] = BtnCreat.extend(deep, clone, copy);
+
+                            // Don't bring in undefined values
+                        } else if (copy !== undefined) {
+                            target[name] = copy;
+                        }
+                    }
+                }
+            }
+
+            // Return the modified object
+            return target;
+        };
+        //基础工具方法
+        BtnCreat.extend({
+            isArray: function(arr) {
+                return toString.call(arr) === '[object Array]';
+            },
+            isFunction: function(arr) {
+                return toString.call(arr) === '[object Function]';
+            },
+            // A crude way of determining if an object is a window
+            isWindow: function(obj) {
+                return obj && typeof obj === "object" && "setInterval" in obj;
+            },
+            type: function(obj) {
+                return obj == null ?
+                    String(obj) :
+                    class2type[toString.call(obj)] || "object";
+            },
+            wordDismantle: function(direction) { //字符串分割，用于分割'_'作为分隔符的字符串
+                //console.log('direction:',direction);
+                if (direction == undefined || direction == null) return -2;
+                if (!(/_/.test(direction))) return -1; //纯数字或者纯字母
+
+                return direction.split('_');
+            },
+            isPlainObject: function(obj) {
+                // Must be an Object.
+                // Because of IE, we also have to check the presence of the constructor property.
+                // Make sure that DOM nodes and window objects don't pass through, as well
+                if (!obj || BtnCreat.type(obj) !== "object" || obj.nodeType || BtnCreat.isWindow(obj)) {
+                    return false;
+                }
+
+                try {
+                    // Not own constructor property must be Object
+                    if (obj.constructor &&
+                        !hasOwn.call(obj, "constructor") &&
+                        !hasOwn.call(obj.constructor.prototype, "isPrototypeOf")) {
+                        return false;
+                    }
+                } catch (e) {
+                    // IE8,9 Will throw exceptions on certain host objects #9897
+                    return false;
+                }
+
+                // Own properties are enumerated firstly, so to speed up,
+                // if last one is own, then all properties are own.
+
+                var key;
+                for (key in obj) {}
+
+                return key === undefined || hasOwn.call(obj, key);
+            },
+            getChild: function(context, tag) {
+                var context = document.getElementById(context);
+                var firstChild = context.firstChild;
+                var arr = [];
+                do {
+                    if (firstChild.nodeType == 1) arr.push(firstChild)
+                } while (firstChild = firstChild.nextSibling)
+                if (tag != 'null') {
+                    tag = tag.toUpperCase();
+                    for (var i = 0; i < arr.length; i++) {
+                        if (arr[i].nodeName != tag) {
+                            arr.splice(i, 1);
+                        }
+                    }
+                }
+                return arr;
+            },
+            each: function(object, callback, args) {
+                var name, i = 0,
+                    length = object.length,
+                    isObj = length === undefined || BtnCreat.isFunction(object);
+
+                if (args) {
+                    if (isObj) {
+                        for (name in object) {
+                            if (callback.apply(object[name], args) === false) {
+                                break;
+                            }
+                        }
+                    } else {
+                        for (; i < length;) {
+                            if (callback.apply(object[i++], args) === false) {
+                                break;
+                            }
+                        }
+                    }
+
+                    // A special, fast, case for the most common use of each
+                } else {
+                    if (isObj) {
+                        for (name in object) {
+                            if (callback.call(object[name], name, object[name]) === false) {
+                                break;
+                            }
+                        }
+                    } else {
+                        for (; i < length;) {
+                            if (callback.call(object[i], i, object[i++]) === false) {
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                return object;
+            },
+        });
+        BtnCreat.each("Boolean Number String Function Array Date RegExp Object".split(" "), function(i, name) {
+            class2type["[object " + name + "]"] = name.toLowerCase();
+        });
+        //按钮部分
+        BtnCreat.fn.extend({
             changeDir: function(dir) {
                 for (var i in this.dir) {
 
@@ -134,104 +318,8 @@
             },
             groupGenerate: function() {
 
-            }
-
-        };
-        BtnCreat.fn.init.prototype = BtnCreat.fn;
-        BtnCreat.extend = BtnCreat.fn.extend = function() {
-            var options, name, src, copy, copyIsArray, clone,
-                target = arguments[0] || {},
-                i = 1,
-                length = arguments.length,
-                deep = false;
-
-            // Handle a deep copy situation
-            if (typeof target === "boolean") {
-                deep = target;
-                target = arguments[1] || {};
-                // skip the boolean and the target
-                i = 2;
-            }
-
-            // Handle case when target is a string or something (possible in deep copy)
-            if (typeof target !== "object" && typeof target !== "function") {
-                target = {};
-            }
-
-            // extend jQuery itself if only one argument is passed
-            if (length === i) {
-                target = this;
-                --i;
-            }
-
-            for (; i < length; i++) {
-                // Only deal with non-null/undefined values
-                if ((options = arguments[i]) != null) {
-                    // Extend the base object
-                    for (name in options) {
-                        src = target[name];
-                        copy = options[name];
-
-                        // Prevent never-ending loop
-                        if (target === copy) {
-                            continue;
-                        }
-
-                        // Recurse if we're merging plain objects or arrays
-                        if (deep && copy && (typeof copy === 'object' || (copyIsArray = BtnCreat.isArray(copy)))) {
-                            if (copyIsArray) {
-                                copyIsArray = false;
-                                clone = src && BtnCreat.isArray(src) ? src : [];
-
-                            } else {
-                                clone = src && BtnCreat.isPlainObject(src) ? src : {};
-                            }
-
-                            // Never move original objects, clone them
-                            target[name] = BtnCreat.extend(deep, clone, copy);
-
-                            // Don't bring in undefined values
-                        } else if (copy !== undefined) {
-                            target[name] = copy;
-                        }
-                    }
-                }
-            }
-
-            // Return the modified object
-            return target;
-        };
-        //基础工具方法
-        BtnCreat.isArray = function(arr) {
-            return toString.call(arr) === '[object Array]';
-        };
-        BtnCreat.isFunction = function(obj) {
-            return toString.call(arr) === '[object Function]';
-        };
-        BtnCreat.wordDismantle = function(direction) { //字符串分割，用于分割'_'作为分隔符的字符串
-            //console.log('direction:',direction);
-            if (direction == undefined || direction == null) return -2;
-            if (!(/_/.test(direction))) return -1; //纯数字或者纯字母
-
-            return direction.split('_');
-        };
-        BtnCreat.getChild = function(context, tag) {
-            var context = document.getElementById(context);
-            var firstChild = context.firstChild;
-            var arr = [];
-            do {
-                if (firstChild.nodeType == 1) arr.push(firstChild)
-            } while (firstChild = firstChild.nextSibling)
-            if (tag != 'null') {
-                tag = tag.toUpperCase();
-                for (var i = 0; i < arr.length; i++) {
-                    if (arr[i].nodeName != tag) {
-                        arr.splice(i, 1);
-                    }
-                }
-            }
-            return arr;
-        }
+            },
+        })
         return BtnCreat;
     })()
     window.$B = BtnCreat;
