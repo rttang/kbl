@@ -157,10 +157,10 @@
         //基础工具方法
         BtnCreat.extend({
             isArray: function(arr) {
-                return toString.call(arr) === '[object Array]';
+                return BtnCreat.type(obj) === "function";
             },
             isFunction: function(arr) {
-                return toString.call(arr) === '[object Function]';
+                return BtnCreat.type(obj) === "array";
             },
             // A crude way of determining if an object is a window
             isWindow: function(obj) {
@@ -316,8 +316,76 @@
                 }
                 return this;
             },
-            groupGenerate: function() {
+            groupGenerate: function(pageDir) {
+                var
+                    ulName = this.dir['name'],
+                    groupRule = this.dir,
+                    row = this.row,
+                    that = this,
+                    liNum, column, tag, num;
+                tag = this.dir['tag'];
+                num = this.dir['num'];
 
+                if (tag) {
+                    //在由js生成的html模板中，问题
+                    liNum = BtnCreat.getChild(ulName,tag).length;
+                } else if (num) {
+                    liNum = parseInt(num);
+                } else {
+                    liNum =BtnCreat.getChild(ulName,'li').length;
+                    //console.log('liNum',liNum)
+                }
+
+                //这个地方有待于优化
+                column = Math.ceil(liNum / row); //循环变量
+
+                for (var i = 0; i < row; i++) { //行
+                    (function(_i) {
+
+                        for (var j = 0; j < column; j++) { //列
+                            //这个写入里面的原因是，引用类型每次修改他的副本一起就被修改了。。
+                            var btnRule = {
+                                    'left': null,
+                                    'right': null,
+                                    'up': null,
+                                    'down': null
+                                },
+                                btnIndex;
+
+                            btnIndex = _i * column + j;
+                            ////console.log('i*column',[i*column]);
+                            if (btnIndex < liNum) { //判断方向，向左减一向右加一，向上减列数，向下加列数
+                                btnRule['left'] = (btnIndex - 1) >= _i * column ? ((btnIndex - 1)) : groupRule['left'];
+                                btnRule['right'] = ((btnIndex + 1) >= 0 && (btnIndex + 1) < column * (_i + 1)) ? ((btnIndex + 1)) : groupRule['right'];
+                                btnRule['up'] = (btnIndex - column) >= 0 ? ((btnIndex - column)) : groupRule['up'];
+                                btnRule['down'] = (btnIndex + column) < liNum ? (btnIndex + column) : groupRule['down'];
+                                if ('vertical' === pageDir) {
+
+                                } else if ('row' === pageDir) {
+                                    if (j === 0) {
+                                        //缺翻页判断万一那个按钮是不显示
+                                        // btnRule['pageLeft'] = btnIndex + column - 1;
+                                        btnRule['pageLeft'] = column - 1;
+                                    } else if (j === (column - 1)) {
+                                        //btnRule['pageRight'] = btnIndex - column + 1;
+                                        btnRule['pageRight'] = 0;
+                                    }
+                                    if (1 == column) {
+                                        btnRule['pageRight'] = 0;
+                                    }
+
+                                } else if ('rowVertical' === pageDir) {
+
+                                }
+                                ////console.log('right',btnRule['right']);
+                                //将生成的按钮存到数组里
+
+                                that.group[btnIndex] = btnRule;
+                            }
+                        }
+                    })(i)
+                }
+                return this;
             },
         })
         return BtnCreat;
