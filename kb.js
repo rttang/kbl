@@ -9,7 +9,10 @@
             slice = Array.prototype.slice,
             trim = String.prototype.trim,
             indexOf = Array.prototype.indexOf,
+<<<<<<< b5a43eb5a7fe070c7e8273af73cb529fa1c00560
             class2type = {},
+=======
+>>>>>>> 暂无更改
             btns = {}; //用于存放所有按钮
         BtnCreat.fn = BtnCreat.prototype = {
             constructor: BtnCreat,
